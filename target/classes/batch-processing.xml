@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce" xmlns:email="http://www.mulesoft.org/schema/mule/email"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:batch="http://www.mulesoft.org/schema/mule/batch" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="590e9417-68e3-482e-a1eb-8d2d767d9836" >
+		<http:listener-connection host="localhost" port="8081" />
+	</http:listener-config>
+	<flow name="batch-processingFlow" doc:id="b34bcc90-630d-4fac-9ba8-444ca5f122f5" >
+		<http:listener doc:name="Listener" doc:id="6bca8fa0-557a-47ba-8261-97019723f4fe" config-ref="HTTP_Listener_config" path="/bp"/>
+		<set-payload value='#[[1,2,"hema",5,7,"tedros","mule",17]]' doc:name="Set Payload" doc:id="a15d5ac8-2d17-43af-99c3-dbe89df690c8" />
+		<batch:job jobName="batch-processingBatch_Job" doc:id="5d021f74-7189-41ff-a910-8921cd9f3b08" maxFailedRecords="-1">
+			<batch:process-records >
+				<batch:step name="Batch_Step-1" doc:id="154b1d30-2c43-4ae2-aa46-8e0ecb480634" acceptPolicy="ALL">
+					<set-payload value="#[payload * 2]" doc:name="Set Payload" doc:id="35fb17c2-217f-42b2-a296-33bdb5cb89d2" />
+					<ee:transform doc:name="Transform Message" doc:id="ae28da42-e624-4e3a-b842-8368b5b33efc" >
+						<ee:message >
+							<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+					<batch:aggregator doc:name="Batch Aggregator" doc:id="34e4f3f6-440e-4f19-b375-0dae1eceb9b6" size="2">
+						<ee:transform doc:name="Transform Message" doc:id="4eeb1b34-f614-4888-9b4d-535293f4e8e2" >
+							<ee:message >
+								<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+							</ee:message>
+						</ee:transform>
+						<logger level="INFO" doc:name="Logger" doc:id="5a888d2e-5337-4602-a5e5-5b4a18014a70" message="#[payload]"/>
+					</batch:aggregator>
+				</batch:step>
+				<batch:step name="Batch_Step-2" doc:id="7048c247-8f4e-45c9-b237-a8f4f43d8af3" >
+					<set-payload value='#["strings are:" ++ payload]' doc:name="Set Payload" doc:id="343cd174-a9a1-4f2e-a33d-c78d940f2181" />
+					<batch:aggregator doc:name="Batch Aggregator" doc:id="0331ecb0-2b8a-4528-844d-cd33ba922850" size="3">
+						<logger level="INFO" doc:name="Logger" doc:id="594aec9e-7431-404d-8ca7-e8647a7389eb" message="#[payload]"/>
+					</batch:aggregator>
+				</batch:step>
+				<batch:step name="Batch_Step-3" doc:id="532b4195-31a8-4c66-8135-a7d3cc43c847" acceptPolicy="ONLY_FAILURES">
+					<set-payload value='#["working on failured records:" ++ payload]' doc:name="Set Payload" doc:id="a2674e43-3ae9-49a7-8d6a-7b6fde18a8df" />
+					<batch:aggregator doc:name="Batch Aggregator" doc:id="5323771f-d2a2-475e-9611-cfc266f9e2a7" size="2">
+						<logger level="INFO" doc:name="Logger" doc:id="80615068-a213-4881-a305-c5fbd41eb6a5" message="#[payload]"/>
+					</batch:aggregator>
+				</batch:step>
+			</batch:process-records>
+			<batch:on-complete >
+				<ee:transform doc:name="Transform Message" doc:id="bc3df6f2-2f06-4296-8e25-1e4942dca482" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<logger level="INFO" doc:name="Logger" doc:id="745cf544-e6ac-4c2e-87ad-cf963de4b0d7" message="#[payload]"/>
+			</batch:on-complete>
+		</batch:job>
+	</flow>
+</mule>
