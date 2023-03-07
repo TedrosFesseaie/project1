@@ -30,8 +30,21 @@
 				<version>${mule.maven.plugin.version}</version>
 				<extensions>true</extensions>
 				<configuration>
-					<classifier>mule-application</classifier>
-				</configuration>
+    <cloudHubDeployment>
+      <uri>https://anypoint.mulesoft.com</uri>
+      <muleVersion>4.4.0</muleVersion>
+      <username>Tedy-march7</username>
+      <password>Asmara1987$</password>
+      <applicationName>projecttedy</applicationName>
+      <environment>Sandbox</environment>
+      <workers>1</workers>
+      <workerType>MICRO</workerType>
+      <objectStoreV2>true</objectStoreV2>
+      <properties>
+        <key>value</key>
+      </properties>
+    </cloudHubDeployment>
+  </configuration>
 			</plugin>
 		</plugins>
 	</build>
